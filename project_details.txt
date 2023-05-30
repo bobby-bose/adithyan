@@ -1,0 +1,13 @@
+
+Email : edutech@vass.co.in
+
+Git HUb User name : vass-edutech
+GitHUb password : vassGPS@2022
+
+GitHUB Link : https://github.com/vass-edutech/core.git
+
+# DB Details
+CREATE DATABASE edutech;
+CREATE USER edutech WITH PASSWORD 'edutech';
+GRANT ALL PRIVILEGES ON DATABASE edutech to edutech;
+Elastic IP :  65.1.87.199
