@@ -32,4 +32,4 @@ jobs:
 
       - name: Deploy using AWS CLI
         run: |
-          aws deploy create-deployment --application-name edvoyage --deployment-group-name django-project-group --s3-location bucket=codepipeline-us-east-1-455367512756,key=s3://codepipeline-us-east-1-455367512756/djangoprojectpipelin/SourceArti/8RdHBcQ,bundleType=zip,eTag=djangoprojectpipelin/SourceArti/8RdHBcQ.zip --region us-east-1 --deployment-config-name CodeDeployDefault.OneAtATime --description "Deployment triggered by GitHub Actions"
+          aws deploy create-deployment --application-name edvoyage --deployment-group-name django-project-group --s3-location bucket=codepipeline-us-east-1-455367512756,key=djangoprojectpipelin/SourceArti/8RdHBcQ.zip,bundleType=zip,eTag=ab0a3aa12be1f20f27758521063f6818-1 --region us-east-1 --deployment-config-name CodeDeployDefault.OneAtATime --description "Deployment triggered by GitHub Actions"
