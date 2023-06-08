@@ -19,7 +19,7 @@ DEBUG = False
 if config('DEBUG') == "1":
     DEBUG = True
 
-ALLOWED_HOSTS = ['.vercel.app', '.now.sh', '.vass.co.in', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['.vercel.app', '.now.sh', '.vass.co.in', '127.0.0.1', 'localhost','35.175.113.151']
 
 
 # Application definition

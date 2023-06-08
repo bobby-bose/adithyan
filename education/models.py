@@ -117,7 +117,7 @@ class UniversityModel(models.Model):
     contry = models.CharField(max_length=180,null=True, blank=True)
     type = models.CharField(max_length=180,null=True, blank=True)
     code = models.CharField(max_length=255,unique=True,blank=True)
-    remarks = models.CharField(max_length=255,unique=True,blank=True)
+    
     url = models.URLField(null=True, blank=True)
     is_shown =  models.BooleanField(default=False)
     is_attended = models.BooleanField(default=False)
