@@ -109,25 +109,36 @@ class MCQInitialModel(models.Model):
         return "mcqInitial"
 
 class UniversityModel(models.Model):
-    univesity_name=models.CharField(max_length=255,unique=True)
-    location = models.CharField(max_length=180,null=True, blank=True)
-    established_year = models.CharField(max_length=180,null=True, blank=True)
-    ranking = models.CharField(max_length=180,null=True, blank=True)
+    university_name = models.CharField(max_length=255)
+    location = models.CharField(max_length=180, null=True, blank=True)
+    established_year = models.CharField(max_length=180, null=True, blank=True)
+    ranking = models.CharField(max_length=180, null=True, blank=True)
     bookmark = models.BooleanField(default=False)
     contry = models.CharField(max_length=180,null=True, blank=True)
     type = models.CharField(max_length=180,null=True, blank=True)
-    code = models.CharField(max_length=255,unique=True,blank=True)
-    
+    code = models.CharField(max_length=255,unique=True,blank=True
     url = models.URLField(null=True, blank=True)
-    is_shown =  models.BooleanField(default=False)
+    is_shown = models.BooleanField(default=False)
     is_attended = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)  # Common Status field
+    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.DO_NOTHING,related_name='university_created')
-    updated_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.DO_NOTHING,
-                                   related_name='univesity_updated' )
+    created_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.DO_NOTHING,
+        related_name='university_created'
+    )
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    updated_by = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.DO_NOTHING,
+        related_name='university_updated'
+    )
+
 
     def __str__(self):
         return str(self.univesity_name)

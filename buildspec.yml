@@ -1,0 +1,35 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+
+      - name: Install project dependencies
+        run: |
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Run tests
+        run: |
+          python manage.py test
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get install -y awscli
+
+      - name: Deploy using AWS CLI
+        run: |
+          aws deploy create-deployment --application-name edvoyage --deployment-group-name django-project-group --s3-location bucket=codepipeline-us-east-1-455367512756,key=djangoprojectpipelin/SourceArti/8RdHBcQ.zip,bundleType=zip,eTag=ab0a3aa12be1f20f27758521063f6818-1 --region us-east-1 --deployment-config-name CodeDeployDefault.OneAtATime --description "Deployment triggered by GitHub Actions"
