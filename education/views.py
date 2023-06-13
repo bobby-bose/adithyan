@@ -19,7 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 
 
 class UniversityListView(APIView):
-    permission_classes =[IsAuthenticated]
+#     permission_classes =[IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
      try:
