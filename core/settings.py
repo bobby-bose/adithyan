@@ -21,6 +21,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'authentication',
     'django_rest_passwordreset'
+    'blog',
+    'education'
     
 ]
 
