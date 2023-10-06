@@ -20,7 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'authentication',
-    'django_rest_passwordreset'
+    'django_rest_passwordreset',
     'blog',
     'education'
     
