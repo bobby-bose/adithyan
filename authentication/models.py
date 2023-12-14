@@ -31,6 +31,9 @@ class OtpHistory(models.Model):
     @property
     def slug_name(self):
         return "otphistory"
+    
+    class Meta:
+        app_label = 'authentication' 
 
 class UserProfile(models.Model):
     TYPES = [("ST", "Student"), ("DR", "Doctor"), ("PRO", "professor")]
