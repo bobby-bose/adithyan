@@ -12,9 +12,12 @@ from rest_framework import generics, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import UserProfile
 from django.db.models import Q
-
+from drf_yasg.utils import swagger_auto_schema
 from .serializers import *
 from twilio.rest import Client
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import generics
+from rest_framework.permissions import AllowAny
 
 
 def index(request):
@@ -158,44 +161,52 @@ class UserLoginView(generics.GenericAPIView):
             }
             return Response(res_data, status=status.HTTP_401_UNAUTHORIZED)
 
-#
+@swagger_auto_schema(
+    operation_description="Pre-login view",
+    responses={200: 'Success', 400: 'Bad Request', 404: 'Not Found'},
+)
 class PreLoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
+    serializer_class=LoginSerializer
 
     def post(self, request):
         try:
             json_data = json.loads(request.body)
             country_code = str(json_data.get("country_code"))
             mobile = str(json_data.get("mobile"))
-            username = str(country_code)+str(mobile)
-            user = User.objects.get(username=username)
+            username = str(country_code) + str(mobile)
+            user = User.objects.filter(username=username).first()
+
             if user is None:
-                res_data = {"code":404, "success":False, "data": {}, "message": "User Not Registerd with give Phone number"}
+                res_data = {"code": 404, "success": False, "data": {}, "message": "User Not Registered with the given Phone number"}
                 return Response(res_data, status=status.HTTP_404_NOT_FOUND)
-           
-            password =  randint(100001, 999999)
-            send_sms = send_otp_mobile(password,username)
+
+            password = randint(100001, 999999)
+            send_sms = send_otp_mobile(password, username)
             print(password)
+
             user.set_password(str(password))
             user.save()
-            user_profile = UserProfile.objects.get(user=user)
+
+            user_profile, created = UserProfile.objects.get_or_create(user=user)
             user_profile.otp = password
             user_profile.save()
+
             res_data = {
-                'code' : 200,
+                'code': 200,
                 'success': True,
-                'message': 'OTP Send to Successfully',
-                'data': {'id': user_obj.id,
-                         'username': user_obj.username,
+                'message': 'OTP Sent Successfully',
+                'data': {'id': user.id,  # Corrected from user_obj to user
+                         'username': user.username,
                          'scope': ""
                          },
             }
             return Response(res_data, status=status.HTTP_200_OK)
         except Exception as ex:
             res_data = {
-                'code' : 400,
+                'code': 400,
                 'success': False,
-                'message': 'Invaild Username ',
+                'message': 'Invalid Username',
                 'data': str(ex),
                 'token': None
             }
