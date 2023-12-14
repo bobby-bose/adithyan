@@ -37,6 +37,9 @@ class AuditTablesModel(models.Model):
     @property
     def slug_name(self):
         return "audittables"
+    
+    class Meta:
+        app_label = 'education' 
 
 class NotificationModel(models.Model):
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING,related_name='notification_user')

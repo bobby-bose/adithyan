@@ -40,6 +40,9 @@ class BlogModel(models.Model):
     def slug_name(self):
         return "blog"
     
+    class Meta:
+        app_label = 'blog' 
+    
     
 
 
