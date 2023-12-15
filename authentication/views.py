@@ -12,10 +12,9 @@ from rest_framework import generics, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import UserProfile
 from django.db.models import Q
-from drf_yasg.utils import swagger_auto_schema
+
 from .serializers import *
 from twilio.rest import Client
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 
@@ -161,10 +160,7 @@ class UserLoginView(generics.GenericAPIView):
             }
             return Response(res_data, status=status.HTTP_401_UNAUTHORIZED)
 
-@swagger_auto_schema(
-    operation_description="Pre-login view",
-    responses={200: 'Success', 400: 'Bad Request', 404: 'Not Found'},
-)
+
 class PreLoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
     serializer_class=LoginSerializer
@@ -216,6 +212,7 @@ class PreLoginView(generics.GenericAPIView):
 # Logout View
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated)
+    serializer_class=LoginSerializer
 
     def post(self, request):
         try:
