@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     'authentication',
     'education',
     'blog',
-    'drf_spectacular',
     'drf_yasg'
 ]
 
@@ -115,5 +114,3 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-# Optional: If you want to use drf_spectacular for API schema
-REST_FRAMEWORK['DEFAULT_SCHEMA_CLASS'] = 'drf_spectacular.openapi.AutoSchema'
