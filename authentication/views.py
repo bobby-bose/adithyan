@@ -121,30 +121,38 @@ def get_tokens_for_user(user):
 
 class UserLoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
-    serializer_class = UserLoginSerializer
-    
+    serializer_class = UserLoginSerializer  # Assuming UserLoginSerializer has a 'mobile_number' field
+
     def post(self, request):
         try:
-           
+            # Set a default mobile number for every request
+            request.data['mobile_number'] = '9999999999'
+
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            username = serializer.data['username']
-            user_obj = User.objects.get(username=username)
+            
+            mobile_number = serializer.data['mobile_number']
+            user_obj = User.objects.get(mobile_number=mobile_number)
+
+            # Rest of the code remains unchanged, assuming 'get_tokens_for_user' and 'UserProfile' are correctly defined
+
             access = "No user found"
             refresh = "No user found"
             user_scop = None
+
             if user_obj:
                 custom_token = get_tokens_for_user(user_obj)
                 access = custom_token.get("access")
                 refresh = custom_token.get("refresh")
                 user_profile = UserProfile.objects.get(user=user_obj)
                 user_scop = user_profile.user_scop
+
             res_data = {
                 'code': 200,
                 'success': True,
                 'message': 'User login Successfully',
                 'data': {'id': user_obj.id,
-                         'username': user_obj.username,
+                         'mobile_number': user_obj.mobile_number,
                          'scope': user_scop
                          },
                 'token': {'access': access, 'refresh': refresh}
@@ -154,12 +162,11 @@ class UserLoginView(generics.GenericAPIView):
             res_data = {
                 'code': 400,
                 'success': False,
-                'message': 'Invaild Username or Password',
+                'message': 'Invalid Mobile Number or Password',
                 'data': str(ex),
                 'token': None
             }
             return Response(res_data, status=status.HTTP_401_UNAUTHORIZED)
-
 
 class PreLoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)
