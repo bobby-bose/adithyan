@@ -7,7 +7,10 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer,TokenObtainSerializer
 from rest_framework.response import Response
 from .models import *
-
+from rest_framework import serializers
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
 User = get_user_model()
@@ -47,35 +50,22 @@ class LoginSerializer(serializers.Serializer):
         return validated_data
 
 
+
+
+
+
+
 from rest_framework import serializers
-from django.contrib.auth import authenticate
-from django.contrib.auth.models import update_last_login
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserLoginSerializer(serializers.Serializer):
     mobile_number = serializers.CharField(max_length=255)
-    token = serializers.CharField(max_length=255, read_only=True)
 
     def validate(self, data):
         mobile_number = data.get("mobile_number", None)
-        user = authenticate(mobile_number=mobile_number)  # Assuming you have a custom authentication backend for mobile_number
-        if user is None:
-            raise serializers.ValidationError(
-                'A user with this mobile number is not found.'
-            )
-        try:
-            jwt_token = TokenObtainPairSerializer.get_token(user)
-            update_last_login(None, user)
-        except User.DoesNotExist:
-            raise serializers.ValidationError(
-                'User with given mobile number does not exist.'
-            )
-        user_data = {
-            'mobile_number': user.mobile_number,
-            'token': jwt_token
-        }
-        return user_data
 
+        # You can perform additional validation logic if needed
+
+        return data
 
 
 # Change Password serializer

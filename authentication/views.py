@@ -12,12 +12,18 @@ from rest_framework import generics, permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .models import UserProfile
 from django.db.models import Q
-
 from .serializers import *
 from twilio.rest import Client
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
-
+from django.contrib.auth.models import User
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework import generics
+from rest_framework_simplejwt.tokens import RefreshToken
+from .models import CustomUser
 
 def index(request):
     return HttpResponse("Welcome to CORE App API Portal")
@@ -111,41 +117,67 @@ class RegisterAPI(APIView):
             }
             return Response(res_data, status=status.HTTP_400_BAD_REQUEST)
 
-def get_tokens_for_user(user):
+from rest_framework_simplejwt.tokens import RefreshToken
+
+def get_tokens_for_user(mobile_number):
+    # Your logic to get or create user and generate tokens
+    # This is just a basic example; you may need to customize it based on your authentication logic
+    
+    user = CustomUser.objects.get(mobile_number=mobile_number)
+    
     refresh = RefreshToken.for_user(user)
 
     return {
-        'refresh': str(refresh),
         'access': str(refresh.access_token),
+        'refresh': str(refresh),
     }
 
+def get_tokens_for_user(mobile_number):
+    # This is a simplified example, you may want to use a library like `dj-rest-auth` for token generation
+    # In this example, we are assuming you have a function to generate tokens called `generate_tokens`
+    access_token, refresh_token = generate_tokens(mobile_number)
+    return {"access": access_token, "refresh": refresh_token}
+
+def generate_tokens(mobile_number):
+    # Replace this with your actual token generation logic
+    # This is a simplified example, you may use Django Rest Framework's `Token` model or JWT library
+    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFydGh5IiwidXNlcl9pZCI6MiwibmJmIjoxNjA5NTk1NzIyLCJleHAiOjE2MDk2MDk3MjIsImlhdCI6MTYwOTU5NTcyMn0.XtJLJ2zwXT2H5tz4V4U4LXfqh7J9jiN2edY99esRwSk", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvYmJ5IiwidXNlcl9pZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.O9y-njdEaJx3nXhPLG69e62Z52ezhj3uHefhBeWg6o0"
+
+def get_or_create_user(mobile_number):
+    # Get the user model
+    User = get_user_model()
+
+    # Try to get the user by mobile number
+    user, created = User.objects.get_or_create(mobile_number=mobile_number, defaults={"password": "Password@37", "username": "bobby"})
+    return user, created
+
+def get_or_create_user(mobile_number):
+    # Get the user model
+
+    # Try to get the user by mobile number
+    user, created = CustomUser.objects.get_or_create(mobile_number=mobile_number, defaults={"password": "Password@37", "username": "bobby"})
+    return user, created
+
+@permission_classes((AllowAny,))
 class UserLoginView(generics.GenericAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = UserLoginSerializer  # Assuming UserLoginSerializer has a 'mobile_number' field
+    serializer_class = UserLoginSerializer
 
     def post(self, request):
         try:
-            # Set a default mobile number for every request
-            request.data['mobile_number'] = '9999999999'
-
             serializer = self.serializer_class(data=request.data)
             serializer.is_valid(raise_exception=True)
-            
-            mobile_number = serializer.data['mobile_number']
-            user_obj = User.objects.get(mobile_number=mobile_number)
 
-            # Rest of the code remains unchanged, assuming 'get_tokens_for_user' and 'UserProfile' are correctly defined
+            mobile_number = serializer.validated_data['mobile_number']
 
-            access = "No user found"
-            refresh = "No user found"
-            user_scop = None
+            # Assuming 'get_tokens_for_user' is a function to generate tokens for a user
+            custom_token = get_tokens_for_user(mobile_number)
+            access = custom_token.get("access")
+            refresh = custom_token.get("refresh")
 
-            if user_obj:
-                custom_token = get_tokens_for_user(user_obj)
-                access = custom_token.get("access")
-                refresh = custom_token.get("refresh")
-                user_profile = UserProfile.objects.get(user=user_obj)
-                user_scop = user_profile.user_scop
+            # Assuming 'get_or_create_user' is a function to create a user if not exists
+            user_obj, created = get_or_create_user(mobile_number)
+
+            user_scop = user_obj.user_scop  # Accessing user_scop directly from the CustomUser instance
 
             res_data = {
                 'code': 200,
@@ -167,6 +199,8 @@ class UserLoginView(generics.GenericAPIView):
                 'token': None
             }
             return Response(res_data, status=status.HTTP_401_UNAUTHORIZED)
+
+
 
 class PreLoginView(generics.GenericAPIView):
     permission_classes = (AllowAny,)

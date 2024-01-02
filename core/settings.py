@@ -115,3 +115,5 @@ SIMPLE_JWT = {
 }
 
 
+# settings.py
+

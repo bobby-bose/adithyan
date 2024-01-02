@@ -5,3 +5,5 @@ from .models import *
 
 admin.site.register(UserProfile)
 admin.site.register(UserRole)
+admin.site.register(CustomUser)
+
