@@ -47,31 +47,35 @@ class LoginSerializer(serializers.Serializer):
         return validated_data
 
 
+from rest_framework import serializers
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import update_last_login
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 class UserLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=255)
-    password = serializers.CharField(max_length=128, write_only=True)
+    mobile_number = serializers.CharField(max_length=255)
     token = serializers.CharField(max_length=255, read_only=True)
 
     def validate(self, data):
-        username = data.get("username", None)
-        password = data.get("password", None)
-        user = authenticate(username=username, password=password)
+        mobile_number = data.get("mobile_number", None)
+        user = authenticate(mobile_number=mobile_number)  # Assuming you have a custom authentication backend for mobile_number
         if user is None:
             raise serializers.ValidationError(
-                'A user with this email and password is not found.'
+                'A user with this mobile number is not found.'
             )
         try:
             jwt_token = TokenObtainPairSerializer.get_token(user)
             update_last_login(None, user)
         except User.DoesNotExist:
             raise serializers.ValidationError(
-                'User with given email and password does not exists'
+                'User with given mobile number does not exist.'
             )
         user_data = {
-            'username': user.username,
+            'mobile_number': user.mobile_number,
             'token': jwt_token
         }
         return user_data
+
 
 
 # Change Password serializer
