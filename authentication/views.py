@@ -23,7 +23,12 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework import generics
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import CustomUser
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import UserData, Question, Notification
+from .serializers import UserDataSerializer, QuestionSerializer, NotificationSerializer
+import datetime
 
 def index(request):
     return HttpResponse("Welcome to CORE App API Portal")
@@ -68,11 +73,14 @@ class RegisterAPI(APIView):
             email = str(json_data.get("email"))
             username = str(country_code)+str(new_mobile)
             obj = self.get_user(username)
+            print(username)
             if obj is None:
                 user = User.objects.create(username=username,email=email)
-                password =  randint(100001, 999999)
-                send_sms = send_otp_mobile(password,username)
-                print(send_sms)
+                print(user)
+                # password =  randint(100001, 999999)
+                password=123456
+                # send_sms = send_otp_mobile(password,username)
+                # print(send_sms)
                 user.set_password(str(password))
                 user.save()
                 profile = UserProfile.objects.create(user=user, otp=password, mobile=username)
@@ -91,9 +99,9 @@ class RegisterAPI(APIView):
                     res_data = {"code":404, "success":False, "data": {}, "message": "User Not Registerd with give Phone number"}
                     return Response(res_data, status=status.HTTP_404_NOT_FOUND)
             
-                password =  randint(100001, 999999)
-                send_sms = send_otp_mobile(password,username)
-                print(send_sms)
+                password =  123456
+                # send_sms = send_otp_mobile(password,username)
+                # print(send_sms)
                 user.set_password(str(password))
                 user.save()
                 user_profile = UserProfile.objects.get(user=user)
@@ -119,75 +127,39 @@ class RegisterAPI(APIView):
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-def get_tokens_for_user(mobile_number):
-    # Your logic to get or create user and generate tokens
-    # This is just a basic example; you may need to customize it based on your authentication logic
-    
-    user = CustomUser.objects.get(mobile_number=mobile_number)
-    
-    refresh = RefreshToken.for_user(user)
 
-    return {
-        'access': str(refresh.access_token),
-        'refresh': str(refresh),
-    }
 
-def get_tokens_for_user(mobile_number):
-    # This is a simplified example, you may want to use a library like `dj-rest-auth` for token generation
-    # In this example, we are assuming you have a function to generate tokens called `generate_tokens`
-    access_token, refresh_token = generate_tokens(mobile_number)
-    return {"access": access_token, "refresh": refresh_token}
 
-def generate_tokens(mobile_number):
-    # Replace this with your actual token generation logic
-    # This is a simplified example, you may use Django Rest Framework's `Token` model or JWT library
-    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFydGh5IiwidXNlcl9pZCI6MiwibmJmIjoxNjA5NTk1NzIyLCJleHAiOjE2MDk2MDk3MjIsImlhdCI6MTYwOTU5NTcyMn0.XtJLJ2zwXT2H5tz4V4U4LXfqh7J9jiN2edY99esRwSk", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImJvYmJ5IiwidXNlcl9pZCI6MSwiZXhwIjoxNTE2MjM5MDIyfQ.O9y-njdEaJx3nXhPLG69e62Z52ezhj3uHefhBeWg6o0"
 
-def get_or_create_user(mobile_number):
-    # Get the user model
-    User = get_user_model()
-
-    # Try to get the user by mobile number
-    user, created = User.objects.get_or_create(mobile_number=mobile_number, defaults={"password": "Password@37", "username": "bobby"})
-    return user, created
-
-def get_or_create_user(mobile_number):
-    # Get the user model
-
-    # Try to get the user by mobile number
-    user, created = CustomUser.objects.get_or_create(mobile_number=mobile_number, defaults={"password": "Password@37", "username": "bobby"})
-    return user, created
-
-@permission_classes((AllowAny,))
 class UserLoginView(generics.GenericAPIView):
     serializer_class = UserLoginSerializer
 
     def post(self, request):
         try:
-            serializer = self.serializer_class(data=request.data)
-            serializer.is_valid(raise_exception=True)
+            country_code = request.data.get('country_code')
+            mobile_number = request.data.get('mobile_number')
 
-            mobile_number = serializer.validated_data['mobile_number']
+            if not country_code or not mobile_number:
+                raise ValueError('Both country_code and mobile_number are required.')
 
-            # Assuming 'get_tokens_for_user' is a function to generate tokens for a user
-            custom_token = get_tokens_for_user(mobile_number)
-            access = custom_token.get("access")
-            refresh = custom_token.get("refresh")
+            mobile = f"{country_code}{mobile_number}"
+            print(mobile)
+            user_obj=User.objects.get(username=mobile)
+            print(user_obj)
 
-            # Assuming 'get_or_create_user' is a function to create a user if not exists
-            user_obj, created = get_or_create_user(mobile_number)
-
-            user_scop = user_obj.user_scop  # Accessing user_scop directly from the CustomUser instance
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user_obj)
+            access = str(refresh.access_token)
 
             res_data = {
                 'code': 200,
                 'success': True,
                 'message': 'User login Successfully',
-                'data': {'id': user_obj.id,
-                         'mobile_number': user_obj.mobile_number,
-                         'scope': user_scop
-                         },
-                'token': {'access': access, 'refresh': refresh}
+                'data': {
+                    'id': user_obj.id,
+                    'mobile_number': user_obj.username,
+                },
+                'token': {'access': access, 'refresh': str(refresh)}
             }
             return Response(res_data, status=status.HTTP_200_OK)
         except Exception as ex:
@@ -199,6 +171,7 @@ class UserLoginView(generics.GenericAPIView):
                 'token': None
             }
             return Response(res_data, status=status.HTTP_401_UNAUTHORIZED)
+
 
 
 
@@ -323,6 +296,120 @@ class ChangePasswordView(generics.UpdateAPIView):
                 'data': str(ex),
             }
             return Response(res_data, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+class AddNotificationAPIView(APIView):
+    serializer_class=NotificationSerializer
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = NotificationSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class AddQuestionAPIView(APIView):
+    serializer_class = QuestionSerializer
+
+    def post(self, request, *args, **kwargs):
+        try:
+            serializer = QuestionSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            questions = Question.objects.all()
+            serializer = QuestionSerializer(questions, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class HomePageAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            # Get the current date and time
+            current_datetime = datetime.datetime.now()
+
+            # Create a new datetime object with the same year and month, and set the day to 1
+            first_day_of_month = current_datetime.replace(day=6)
+            print(first_day_of_month)
+
+            # Get the question of the day based on the date
+            question_of_the_day = Question.objects.get(day_of_month=first_day_of_month)
+            question_serializer = QuestionSerializer(question_of_the_day)
+
+            # Get all notifications
+            all_notifications = Notification.objects.all()
+            all_notifications_serializer = NotificationSerializer(all_notifications, many=True)
+
+            # Get offer notifications
+            offer_notifications = Notification.objects.filter(notification_type='OFFERS')
+            offer_notifications_serializer = NotificationSerializer(offer_notifications, many=True)
+
+            response_data = {
+                'question_of_the_day': question_serializer.data,
+                'all_notifications': all_notifications_serializer.data,
+                'offer_notifications': offer_notifications_serializer.data,
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Question.DoesNotExist:
+            return Response({'error': 'Question of the day not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def post(self, request, *args, **kwargs):
+        try:
+            mood = request.data.get('mood', '')
+            mcq_answer = request.data.get('mcq_answer', '')  # Assuming 'mcq_answer' is the field name
+
+            if not mood:
+                return Response({'error': 'Mood is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Save mood to the user's data model
+            user_data, created = UserData.objects.get_or_create(user=request.user)
+            user_data.mood = mood
+            user_data.save()
+
+            # Get the day of the month
+            day_of_month = datetime.datetime.now().day
+
+            # Get the question of the day based on the date
+            question_of_the_day = Question.objects.get(day_of_month=day_of_month)
+
+            # Save MCQ answer to the user's data model
+            user_data.mcq_answer = mcq_answer
+            user_data.save()
+
+            response_data = {
+                'mood_data': UserDataSerializer(user_data).data,
+                'question_of_the_day': QuestionSerializer(question_of_the_day).data,
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except Question.DoesNotExist:
+            return Response({'error': 'Question of the day not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except UserData.DoesNotExist:
+            return Response({'error': 'User data not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
+
+
 
 
 # API View for  Retrieve User data, Update and delete User data using pk as ID

@@ -70,50 +70,27 @@ class UserRole(models.Model):
     def slug_name(self):
         return "userrole"
 
-from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.db import models
+class UserData(models.Model):
+    user = models.OneToOneField(UserProfile, on_delete=models.CASCADE)
+    mood = models.CharField(max_length=255)
 
-class CustomUserManager(BaseUserManager):
-    def create_user(self, mobile_number, password=None, **extra_fields):
-        if not mobile_number:
-            raise ValueError('The mobile number must be set')
+class Question(models.Model):
+    day_of_month = models.DateField()
+    question_text = models.CharField(max_length=255)
+    option_1 = models.CharField(max_length=255)
+    option_2 = models.CharField(max_length=255)
+    option_3 = models.CharField(max_length=255)
+    option_4 = models.CharField(max_length=255)
 
-        user = self.model(mobile_number=mobile_number, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, mobile_number, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-
-        return self.create_user(mobile_number, password, **extra_fields)
-
-class CustomUser(AbstractUser):
-    mobile_number = models.CharField(max_length=255, unique=True)
-    user_scop = models.CharField(max_length=255)  # Add your desired fields here
-
-    objects = CustomUserManager()
-
-    # Add or modify related_name for groups and user_permissions
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='customuser_groups',
-        blank=True,
-        verbose_name='groups',
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='customuser_user_permissions',
-        blank=True,
-        verbose_name='user permissions',
-        help_text='Specific permissions for this user.',
-        error_messages={
-            'add': 'The permission could not be created.',
-            'remove': 'The permission could not be removed.',
-        },
+class Notification(models.Model):
+    NOTIFICATION_TYPES = (
+        ('ALL', 'All'),
+        ('OFFERS', 'Offers'),
     )
 
-    def __str__(self):
-        return self.username
+    notification_type = models.CharField(max_length=255, choices=NOTIFICATION_TYPES)
+    content = models.TextField()
+
+    # Add other fields as needed
+
+

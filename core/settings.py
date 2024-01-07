@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'authentication',
     'education',
     'blog',
+    'University',
+    'Profile',
     'drf_yasg'
 ]
 
